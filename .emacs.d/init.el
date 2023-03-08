@@ -2,13 +2,19 @@
 (add-to-list 'load-path "~/.emacs.d/lisp/")
 (load "~/.emacs.d/lisp/init_org_mode.emacs") ;; org-mode settings
 
-
 ;; Package management 
 (require 'package)
-(setq package-archives '(;; ("gnu" . "https://elpa.gnu.org/packages/")
-                         ;; ("marmalade" . "https://marmalade-repo.org/packages/")
-                         ("melpa" . "https://melpa.org/packages/")))
+
+(add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/"))
+;; (add-to-list 'package-archives '("nongnu" . "https://elpa.nongnu.org/nongnu/")) ;; Redundant in emacs >= 28?
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 (package-initialize)
+(unless package-archive-contents (package-refresh-contents))
+(unless (package-installed-p 'use-package) (package-install 'use-package))
+(require 'use-package)
+(setq use-package-always-ensure t)
+(use-package auto-package-update)
+(auto-package-update-now-async)
 
 
 ;; Backup files
@@ -69,18 +75,26 @@ Also returns nil if pid is nil."
       inhibit-startup-message t
       mouse-autoselect-window t
       x-underline-at-descent-line t
-      solarized-scale-org-headlines nil
-      solarized-use-variable-pitch nil
+      visible-bell t
       )
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (horizontal-scroll-bar-mode -1)
-(load-theme 'solarized-dark t)
+(global-prettify-symbols-mode 1)
 ;; (set-frame-parameter nil 'background-mode 'dark)
 ;; (set-terminal-parameter nil 'background-mode 'dark)
 ;; (custom-set-faces (if (not window-system) '(default ((t (:background "nil"))))))
 
+
+;; Theme
+(use-package solarized-theme)
+(setq
+ solarized-scale-org-headlines nil
+ solarized-use-variable-pitch nil
+ )
+
+(load-theme 'solarized-dark t)
 
 ;; Scrolling
 (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
@@ -94,11 +108,11 @@ Also returns nil if pid is nil."
 
 
 ;; Word-count mode--need to enable with M-x wc-mode
-(require 'wc-mode)
+(use-package wc-mode)
 
 
 ;; Highlight entire line in dired
-(require 'stripe-buffer)
+(use-package stripe-buffer)
 (add-hook 'dired-mode-hook 'stripe-listify-buffer)
 
 
@@ -107,10 +121,79 @@ Also returns nil if pid is nil."
 ;; (setq mm-external-terminal-program "urxvt")
 
 
-;; zsh-like minibuffer completion
-(require 'zlc)
-(zlc-mode t)
+;; ;; zsh-like minibuffer completion
+;; (use-package zlc)
+;; (zlc-mode t)
 
+
+(use-package vertico
+  :init
+  (vertico-mode)
+  (setq vertico-resize t)
+  (setq vertico-cycle t)
+  )
+
+(use-package savehist
+  :init
+  (savehist-mode))
+
+(use-package emacs
+  :init
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
+  ;; Vertico commands are hidden in normal buffers.
+  (setq read-extended-command-predicate
+        #'command-completion-default-include-p)
+
+  (setq enable-recursive-minibuffers t)
+  )
+
+(use-package marginalia
+  :bind (("M-A" . marginalia-cycle))
+  :custom
+  (marginalia-align 'right)
+  :init
+  (marginalia-mode))
+
+(use-package orderless
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides
+   '(file (styles basic basic-remote partial-completion)))
+  :init
+ )
+
+(use-package all-the-icons
+  :if (display-graphic-p))
+
+(use-package all-the-icons-completion
+  :if (display-graphic-p)
+  :after (marginalia all-the-icons)
+  :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+  :init
+  (all-the-icons-completion-mode)
+  )
+
+(use-package all-the-icons-dired
+  :if (display-graphic-p)
+  :after all-the-icons
+  :hook (dired-mode . all-the-icons-dired-mode)
+  :init
+  )
+
+(use-package doom-modeline
+  :init
+  (doom-modeline-mode 1)
+  )
+
+(use-package company
+  :init
+  (global-company-mode)
+  )
 
 ;; Custom keybindings
 (global-set-key "\C-w" 'backward-kill-word)
@@ -168,12 +251,36 @@ Also returns nil if pid is nil."
   (set-face-attribute 'default nil :height 140)
   (setq mac-command-modifier 'control
 	mac-option-modifier 'meta
-	mac-pass-command-to-system 'nil
-	mac-pass-control-to-system 'nil
+	mac-pass-command-to-system nil
+	mac-pass-control-to-system nil
 	explicit-shell-file-name "/opt/homebrew/bin/fish"
 	)
   )
 
 
+(use-package which-key)
+(use-package lsp-mode
+  :after which-key
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :hook
+         (python-mode . lsp)
+         (lsp-mode . lsp-enable-which-key-integration)
+  :commands lsp)
+
 (provide 'init)
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(company company-mode orderless doom-modeline spaceline-all-the-icons spaceline marginalia lsp-mode which-key zlc use-package stripe-buffer solarized-theme)))
+
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
