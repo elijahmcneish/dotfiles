@@ -104,7 +104,7 @@ Also returns nil if pid is nil."
 
 
 ;; Display line numbers
-(global-linum-mode)
+(global-display-line-numbers-mode)
 
 
 ;; Word-count mode--need to enable with M-x wc-mode
