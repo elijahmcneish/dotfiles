@@ -46,3 +46,25 @@
  holiday-hebrew-holidays 'nil
  holiday-islamic-holidays 'nil
  )
+
+;; Google Calendar syncing
+(use-package oauth2)
+(use-package org-caldav
+ :after oauth2
+ :init
+ (load "~/.emacs.d/lisp/org_caldav_secrets.emacs")
+;;  (org-caldav-sync)
+ )
+
+;; (use-package request)
+;; (use-package alert)
+;; (use-package persist)
+;; (use-package aio)
+;; (load "emacs-oauth2-auto")
+;; (require 'oauth2-auto)
+;; (use-package org-gcal
+;;   :after (request alert persist aio)
+;;   :init
+;;  (setq plstore-cache-passphrase-for-symmetric-encryption t)
+;;   (load "~/.emacs.d/lisp/org_caldav_secrets.emacs")
+;;   )

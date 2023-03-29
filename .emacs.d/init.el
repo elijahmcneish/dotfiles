@@ -1,7 +1,3 @@
-;; Load paths
-(add-to-list 'load-path "~/.emacs.d/lisp/")
-(load "~/.emacs.d/lisp/init_org_mode.emacs") ;; org-mode settings
-
 ;; Package management 
 (require 'package)
 
@@ -14,8 +10,11 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 (use-package auto-package-update)
-(auto-package-update-now-async)
+;;(auto-package-update-now-async)
 
+;; Load paths
+(add-to-list 'load-path "~/.emacs.d/lisp/")
+(load "~/.emacs.d/lisp/init_org_mode.emacs") ;; org-mode settings
 
 ;; Backup files
 (setq
@@ -27,7 +26,6 @@
     version-control t)
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
-
 
 ;; Desktop settings
 (desktop-save-mode 1)
@@ -60,14 +58,11 @@ Also returns nil if pid is nil."
   (when (not (emacs-process-p ad-return-value))
     (setq ad-return-value nil)))
 
-
 ;; Change yes/no questions to y/n
 (fset 'yes-or-no-p 'y-or-n-p)
 
-
 ;; Don't confirm on exit
 (setq confirm-kill-emacs nil)
-
 
 ;; Basic visual settings
 (setq inhibit-splash-screen t
@@ -87,14 +82,29 @@ Also returns nil if pid is nil."
 ;; (custom-set-faces (if (not window-system) '(default ((t (:background "nil"))))))
 
 
-;; Theme
-(use-package solarized-theme)
-(setq
- solarized-scale-org-headlines nil
- solarized-use-variable-pitch nil
- )
+;; MacOS settings
+(when (eq system-type 'darwin)
+  (set-face-attribute 'default nil :family "Hack Nerd Font Mono")
+  (set-face-attribute 'default nil :height 140)
+  (setq menu-bar-mode 't
+	mac-command-modifier 'control
+	mac-option-modifier 'meta
+	mac-pass-command-to-system nil
+	mac-pass-control-to-system nil
+	explicit-shell-file-name "/opt/homebrew/bin/fish"
+	)
+  )
 
-(load-theme 'solarized-dark t)
+;; Theme
+;; (use-package solarized-theme)
+;; (setq
+;;  solarized-scale-org-headlines nil
+;;  solarized-use-variable-pitch nil
+;;  )
+;; (load-theme 'solarized-dark t)
+(use-package color-theme-sanityinc-tomorrow)
+(load-theme 'sanityinc-tomorrow-eighties t)
+
 
 ;; Scrolling
 (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
@@ -102,29 +112,19 @@ Also returns nil if pid is nil."
 (setq mouse-wheel-follow-mouse t) ;; scroll window under mouse
 (setq scroll-step 1) ;; keyboard scroll one line at a time
 
-
 ;; Display line numbers
 (global-display-line-numbers-mode)
-
 
 ;; Word-count mode--need to enable with M-x wc-mode
 (use-package wc-mode)
 
-
-;; Highlight entire line in dired
-(use-package stripe-buffer)
-(add-hook 'dired-mode-hook 'stripe-listify-buffer)
-
-
 ;; Terminal settings
 ;; (setq explicit-shell-file-name "/usr/bin/fish")
-;; (setq mm-external-terminal-program "urxvt")
-
+;; (setq mm-external-terminal-program "kitty")
 
 ;; ;; zsh-like minibuffer completion
 ;; (use-package zlc)
 ;; (zlc-mode t)
-
 
 (use-package vertico
   :init
@@ -135,7 +135,8 @@ Also returns nil if pid is nil."
 
 (use-package savehist
   :init
-  (savehist-mode))
+  (savehist-mode)
+  )
 
 (use-package emacs
   :init
@@ -157,7 +158,8 @@ Also returns nil if pid is nil."
   :custom
   (marginalia-align 'right)
   :init
-  (marginalia-mode))
+  (marginalia-mode)
+  )
 
 (use-package orderless
   :custom
@@ -165,10 +167,11 @@ Also returns nil if pid is nil."
   (completion-category-overrides
    '(file (styles basic basic-remote partial-completion)))
   :init
- )
+  )
 
 (use-package all-the-icons
-  :if (display-graphic-p))
+  :if (display-graphic-p)
+  )
 
 (use-package all-the-icons-completion
   :if (display-graphic-p)
@@ -185,12 +188,34 @@ Also returns nil if pid is nil."
   :init
   )
 
+;; Highlight entire line in dired
+(use-package stripe-buffer)
+(add-hook 'dired-mode-hook 'stripe-listify-buffer)
+
+(use-package dired-sidebar
+  :config
+
+;;  (setq dired-sidebar-set-width '50)
+  (setq dired-sidebar-theme 'icons)
+
+  :init
+  (dired-sidebar-show-sidebar) ;; FIXME Appears briefly then disappears on load.
+  )
+
 (use-package doom-modeline
   :init
   (doom-modeline-mode 1)
   )
 
+(use-package nyan-mode
+  :after (doom-modeline)
+  :init
+  (nyan-mode)
+  )
+
 (use-package company
+  :config
+  :bind (:map company-active-map ("<tab>" . company-complete-selection))
   :init
   (global-company-mode)
   )
@@ -204,33 +229,27 @@ Also returns nil if pid is nil."
 (global-set-key (kbd "RET") 'reindent-then-newline-and-indent)
 ;; (keyboard-translate ?\C-h ?\C-?) ;; C-h to backspace. F1 for help.
 
-
 ;; Insert newline at end of buffer with C-n
 (setq next-line-add-newlines t)
-
 
 ;; Allow opening files with sudo
 (setq tramp-default-method "ssh")
 
-
 ;; Web browser settings
-(setq browse-url-browser-function 'browse-url-generic
-      browse-url-generic-program "firefox")
-(setq read-file-name-completion-ignore-case t)
-(setq read-buffer-completion-ignore-case t)
-
+;; (setq browse-url-browser-function 'browse-url-generic
+;;       browse-url-generic-program "firefox")
+;; (setq read-file-name-completion-ignore-case t)
+;; (setq read-buffer-completion-ignore-case t)
 
 ;; Line wrapping
 (add-hook 'text-mode-hook 'visual-line-mode)
 (add-hook 'org-mode-hook 'visual-line-mode)
-
 
 ;; Enable mouse when running with "emacs -nw"
 (require 'mouse)
 (xterm-mouse-mode t)
 (defun track-mouse (e))
 (setq mouse-sel-mode t)
-
 
 ;; Show week numbers in calendar
 (copy-face font-lock-constant-face 'calendar-iso-week-face)
@@ -244,20 +263,6 @@ Also returns nil if pid is nil."
                   (calendar-absolute-from-gregorian (list month day year)))))
         'font-lock-face 'calendar-iso-week-face))
 
-
-;; MacOS settings
-(when (eq system-type 'darwin)
-  (set-face-attribute 'default nil :family "Hack Nerd Font Mono")
-  (set-face-attribute 'default nil :height 140)
-  (setq mac-command-modifier 'control
-	mac-option-modifier 'meta
-	mac-pass-command-to-system nil
-	mac-pass-control-to-system nil
-	explicit-shell-file-name "/opt/homebrew/bin/fish"
-	)
-  )
-
-
 (use-package which-key)
 (use-package lsp-mode
   :after which-key
@@ -268,6 +273,14 @@ Also returns nil if pid is nil."
          (lsp-mode . lsp-enable-which-key-integration)
   :commands lsp)
 
+(use-package tree-sitter)
+(use-package tree-sitter-langs)
+(use-package tree-sitter-indent)
+(use-package csharp-mode
+  :config
+  (add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-tree-sitter-mode))
+  )
+
 (provide 'init)
 ;;; init.el ends here
 (custom-set-variables
@@ -275,8 +288,10 @@ Also returns nil if pid is nil."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("628278136f88aa1a151bb2d6c8a86bf2b7631fbea5f0f76cba2a0079cd910f7d" default))
  '(package-selected-packages
-   '(company company-mode orderless doom-modeline spaceline-all-the-icons spaceline marginalia lsp-mode which-key zlc use-package stripe-buffer solarized-theme)))
+   '(dired-sidebar nyan-mode color-theme-sanityinc-tomorrow company company-mode orderless doom-modeline spaceline-all-the-icons spaceline marginalia lsp-mode which-key zlc use-package stripe-buffer solarized-theme)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
